@@ -1,0 +1,250 @@
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Meus Pacientes</h1>
+        <a href="<?= defined('URL_BASE') ? URL_BASE : '' ?>/pacientes/cadastrar" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Novo Paciente
+        </a>
+    </div>
+
+    <!-- BLOCO DE MENSAGENS DE SESSÃO -->
+    <?php if (isset($_SESSION['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?= $_SESSION['success'];
+            unset($_SESSION['success']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <?= $_SESSION['error'];
+            unset($_SESSION['error']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+    <!-- FIM DO BLOCO DE MENSAGENS -->
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Listagem de Pacientes</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Telefone</th>
+                            <th class="text-center" style="width: 150px;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (isset($pacientes) && count($pacientes) > 0): ?>
+                            <?php foreach ($pacientes as $p):
+                                // Formatação de Endereço
+                                $endereco = trim(($p['logradouro'] ?? '') . ', ' . ($p['numero'] ?? '') . ' ' . ($p['complemento'] ?? '') . ' - ' . ($p['bairro'] ?? '') . ' ' . ($p['cidade'] ?? '') . '/' . ($p['estado'] ?? ''));
+
+                                // Formatação Data Cadastro
+                                $dataCad = $p['created_at'] ?? $p['data_cadastro'] ?? null;
+                                $dataCadFormatada = $dataCad ? date('d/m/Y H:i', strtotime($dataCad)) : '-';
+                            ?>
+                                <tr>
+                                    <td class="align-middle"><?= $p['id_paciente'] ?></td>
+                                    <td class="align-middle"><?= $p['nome'] ?></td>
+                                    <td class="align-middle"><?= $p['cpf'] ?? '-' ?></td>
+                                    <td class="align-middle"><?= $p['telefone'] ?? '-' ?></td>
+                                    <td class="text-center align-middle">
+                                        <!-- Container flexível para alinhar os botões lado a lado -->
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <!-- Botão Visualizar -->
+                                            <button type="button" class="btn btn-info btn-sm btn-circle"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalVisualizar"
+                                                title="Visualizar Detalhes"
+
+                                                data-id="<?= $p['id_paciente'] ?>"
+                                                data-nome="<?= $p['nome'] ?>"
+                                                data-cpf="<?= $p['cpf'] ?? '-' ?>"
+                                                data-email="<?= $p['email'] ?? '-' ?>"
+                                                data-telefone="<?= $p['telefone'] ?? '-' ?>"
+                                                data-nasc="<?= !empty($p['data_nascimento']) ? date('d/m/Y', strtotime($p['data_nascimento'])) : '-' ?>"
+                                                data-genero="<?= $p['genero'] ?? '-' ?>"
+                                                data-origem="<?= $p['origem'] ?? '-' ?>"
+
+                                                data-responsavel="<?= $p['nome_responsavel'] ?? '-' ?>"
+                                                data-resp-fin="<?= $p['responsavel_financeiro'] ?? '-' ?>"
+
+                                                data-cep="<?= $p['cep'] ?? '-' ?>"
+                                                data-endereco="<?= $endereco === ',  -' ? '-' : $endereco ?>"
+
+                                                data-obs="<?= $p['observacoes'] ?? '-' ?>"
+                                                data-tags="<?= $p['tags'] ?? '-' ?>"
+                                                data-cadastro="<?= $dataCadFormatada ?>">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+
+                                            <!-- Botão Editar -->
+                                            <a href="<?= defined('URL_BASE') ? URL_BASE : '' ?>/pacientes/editar?id=<?= $p['id_paciente'] ?>" class="btn btn-warning btn-sm btn-circle" title="Editar">
+                                                <i class="fas fa-pen"></i>
+                                            </a>
+
+                                            <!-- Botão Excluir -->
+                                            <a href="<?= defined('URL_BASE') ? URL_BASE : '' ?>/pacientes/excluir?id=<?= $p['id_paciente'] ?>" class="btn btn-danger btn-sm btn-circle" title="Excluir" onclick="return confirm('Deseja realmente excluir este paciente?');">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="5" class="text-center">Nenhum paciente encontrado.</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Visualizar (Layout Padrão Bootstrap) -->
+<div class="modal fade" id="modalVisualizar" tabindex="-1" role="dialog" aria-labelledby="modalVisualizarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-white bg-gradient-secundary">
+                <h5 class="modal-title text-secondary" id="modalVisualizarLabel">Detalhes do Paciente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <h6 class="text-info fw-bold mb-3"><i class="fas fa-user me-1"></i> Informações Pessoais</h6>
+                <dl class="row">
+                    <dt class="col-sm-3">Nome:</dt>
+                    <dd class="col-sm-9" id="viewNome"></dd>
+
+                    <dt class="col-sm-3">CPF:</dt>
+                    <dd class="col-sm-3" id="viewCpf"></dd>
+
+                    <dt class="col-sm-3">Gênero:</dt>
+                    <dd class="col-sm-3" id="viewGenero"></dd>
+
+                    <dt class="col-sm-3">Data Nasc.:</dt>
+                    <dd class="col-sm-3" id="viewNasc"></dd>
+
+                    <dt class="col-sm-3">Origem:</dt>
+                    <dd class="col-sm-3" id="viewOrigem"></dd>
+                </dl>
+
+                <hr>
+
+                <h6 class="text-info fw-bold mb-3"><i class="fas fa-address-book me-1"></i> Contato e Endereço</h6>
+                <dl class="row">
+                    <dt class="col-sm-3">E-mail:</dt>
+                    <dd class="col-sm-9" id="viewEmail"></dd>
+
+                    <dt class="col-sm-3">Telefone:</dt>
+                    <dd class="col-sm-9" id="viewTelefone"></dd>
+
+                    <dt class="col-sm-3">CEP:</dt>
+                    <dd class="col-sm-3" id="viewCep"></dd>
+
+                    <dt class="col-sm-3">Endereço:</dt>
+                    <dd class="col-sm-12" id="viewEndereco"></dd>
+                </dl>
+
+                <hr>
+
+                <h6 class="text-info fw-bold mb-3"><i class="fas fa-users me-1"></i> Responsáveis</h6>
+                <dl class="row">
+                    <dt class="col-sm-3">Responsável:</dt>
+                    <dd class="col-sm-9" id="viewResponsavel"></dd>
+
+                    <dt class="col-sm-3">Financeiro:</dt>
+                    <dd class="col-sm-9" id="viewRespFin"></dd>
+                </dl>
+
+                <hr>
+
+                <h6 class="text-info fw-bold mb-3"><i class="fas fa-clipboard me-1"></i> Outros</h6>
+                <dl class="row">
+                    <dt class="col-sm-3">Observações:</dt>
+                    <dd class="col-sm-9" id="viewObs"></dd>
+                    <hr>
+                    <dt class="col-sm-3">Tags:</dt>
+                    <dd class="col-sm-9"><span id="viewTags" class="badge bg-secondary"></span></dd>
+
+                    <dt class="col-sm-3">Cadastro:</dt>
+                    <dd class="col-sm-9" id="viewCadastro"></dd>
+                </dl>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializa o modal
+        const modalEl = document.getElementById('modalVisualizar');
+
+        if (modalEl) {
+            modalEl.addEventListener('show.bs.modal', function(event) {
+                // Botão que acionou o modal
+                const button = event.relatedTarget;
+
+                // Extrai informações dos atributos data-*
+                const nome = button.getAttribute('data-nome');
+                const cpf = button.getAttribute('data-cpf');
+                const email = button.getAttribute('data-email');
+                const telefone = button.getAttribute('data-telefone');
+                const nasc = button.getAttribute('data-nasc');
+                const genero = button.getAttribute('data-genero');
+                const origem = button.getAttribute('data-origem');
+
+                const responsavel = button.getAttribute('data-responsavel');
+                const respFin = button.getAttribute('data-resp-fin');
+
+                const cep = button.getAttribute('data-cep');
+                const endereco = button.getAttribute('data-endereco');
+
+                const obs = button.getAttribute('data-obs');
+                const tags = button.getAttribute('data-tags');
+                const cadastro = button.getAttribute('data-cadastro');
+
+                // Atualiza o conteúdo do modal
+                modalEl.querySelector('#viewNome').textContent = nome;
+                modalEl.querySelector('#viewCpf').textContent = cpf;
+                modalEl.querySelector('#viewEmail').textContent = email;
+                modalEl.querySelector('#viewTelefone').textContent = telefone;
+                modalEl.querySelector('#viewNasc').textContent = nasc;
+                modalEl.querySelector('#viewGenero').textContent = genero;
+                modalEl.querySelector('#viewOrigem').textContent = origem;
+
+                modalEl.querySelector('#viewResponsavel').textContent = responsavel;
+                modalEl.querySelector('#viewRespFin').textContent = respFin;
+
+                modalEl.querySelector('#viewCep').textContent = cep;
+                modalEl.querySelector('#viewEndereco').textContent = endereco;
+
+                modalEl.querySelector('#viewObs').textContent = obs;
+
+                const viewTags = modalEl.querySelector('#viewTags');
+                if (!tags || tags === '-' || tags === '') {
+                    viewTags.textContent = 'Sem tags';
+                    viewTags.className = 'badge bg-secondary'; // Cinza se vazio
+                } else {
+                    viewTags.textContent = tags;
+                    viewTags.className = 'badge bg-info text-dark'; // Azul claro se tiver tags
+                }
+
+                modalEl.querySelector('#viewCadastro').textContent = cadastro;
+            });
+        }
+    });
+</script>
